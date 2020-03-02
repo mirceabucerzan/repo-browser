@@ -2,6 +2,7 @@ package com.mircea.repobrowser
 
 import android.app.Application
 import com.mircea.repobrowser.logging.TimberReleaseTree
+import com.mircea.repobrowser.networking.HttpClientManager
 import timber.log.Timber
 
 /**
@@ -14,6 +15,9 @@ class RepoBrowserApplication : Application() {
 
         // init the Timber logging library
         Timber.plant(if (BuildConfig.DEBUG) Timber.DebugTree() else TimberReleaseTree())
+
+        // init HttpClient
+        HttpClientManager.init(this)
     }
 
 }
