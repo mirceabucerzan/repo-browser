@@ -1,3 +1,7 @@
 <resources>
     <string name="app_name">Repo Browser</string>
+    <string name="activity_repo_browser_title">Square\'s Repositories</string>
+    <string name="repo_image_content_description">Repository owner logo</string>
+    <string name="error_generic">An error has occurred.</string>
+    <string name="error_no_network">Error. Please check your Internet connection!</string>
 </resources>
