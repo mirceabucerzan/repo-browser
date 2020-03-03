@@ -7,10 +7,7 @@ import retrofit2.http.Path
 /**
  * Provides access to repositories data, stored on GitHub servers.
  */
-interface GithubReposDataSource {
-    companion object {
-        const val SQUARE_ORG_NAME = "square"
-    }
+interface GitHubApi {
 
     @GET("/orgs/{name}/repos")
     suspend fun getRepos(@Path("name") organizationName: String): Response<List<RepoDto>>
