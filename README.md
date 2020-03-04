@@ -2,6 +2,10 @@
 An Android application which displays a vertically scrollable list of [Square's](https://square.github.io/) open-source GitHub repositories.
 Each list item displays the repository's title, description and owner avatar logo image.
 
+<div>
+  <img align="center" src="repoBrowser.png" alt="Repo Browser screenshot" height="320" width="160">
+</div>
+
 ## Project Structure
 Repo Browser is written entirely in Kotlin and uses the Gradle build system. It is currently made up of a single module: `app`.
 
