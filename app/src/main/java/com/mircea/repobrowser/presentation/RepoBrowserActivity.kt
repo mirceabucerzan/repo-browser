@@ -1,5 +1,7 @@
 package com.mircea.repobrowser.presentation
 
+import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import android.view.View
 import android.widget.ProgressBar
@@ -19,7 +21,7 @@ import timber.log.Timber
  * Activity which displays a vertically scrollable list of Square's GitHub repositories.
  * Each list item displays the repo's name, description and owner avatar image.
  */
-class RepoBrowserActivity : AppCompatActivity() {
+class RepoBrowserActivity : AppCompatActivity(), RepoListAdapter.ItemSelectedListener {
 
     private lateinit var viewModel: RepoBrowserViewModel
     private lateinit var repoListAdapter: RepoListAdapter
@@ -60,6 +62,16 @@ class RepoBrowserActivity : AppCompatActivity() {
         }
     }
 
+    private val openWebPageEventObserver: UniqueEventObserver<String> = UniqueEventObserver { url ->
+        val webPageUri = Uri.parse(url)
+        val intent = Intent(Intent.ACTION_VIEW, webPageUri)
+        // check if the Intent can be resolved, and start the activity
+        if (intent.resolveActivity(packageManager) != null) {
+            Timber.d("Opening web page $webPageUri")
+            startActivity(intent)
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -73,7 +85,7 @@ class RepoBrowserActivity : AppCompatActivity() {
         repoList = findViewById(R.id.repo_list)
         repoList.setHasFixedSize(true)
         repoList.layoutManager = LinearLayoutManager(this)
-        repoListAdapter = RepoListAdapter()
+        repoListAdapter = RepoListAdapter(this)
         repoList.adapter = repoListAdapter
 
         // init ViewModel
@@ -86,6 +98,11 @@ class RepoBrowserActivity : AppCompatActivity() {
         super.onStart()
         // observe data
         viewModel.getSquareRepositories().observe(this, repoListObserver)
+        // observe open web page events
+        viewModel.getOpenWebPageEvent().observe(this, openWebPageEventObserver)
     }
 
+    override fun onItemSelected(itemId: Long) {
+        viewModel.itemSelected(itemId)
+    }
 }

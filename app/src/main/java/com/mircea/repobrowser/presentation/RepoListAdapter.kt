@@ -13,7 +13,16 @@ import com.mircea.repobrowser.R
 /**
  * Binds [RepoItem]s to views displayed in a RecyclerView.
  */
-class RepoListAdapter : RecyclerView.Adapter<RepoViewHolder>() {
+class RepoListAdapter(private val listener: ItemSelectedListener?) :
+    RecyclerView.Adapter<RepoViewHolder>() {
+
+    /**
+     * Interface definition for a callback invoked when an item is clicked.
+     */
+    interface ItemSelectedListener {
+        fun onItemSelected(itemId: Long)
+    }
+
     var items: List<RepoItem> = emptyList()
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int) =
@@ -22,7 +31,7 @@ class RepoListAdapter : RecyclerView.Adapter<RepoViewHolder>() {
                 R.layout.repo_list_item,
                 parent,
                 false
-            )
+            ), listener
         )
 
     override fun getItemCount(): Int = items.size
@@ -32,12 +41,14 @@ class RepoListAdapter : RecyclerView.Adapter<RepoViewHolder>() {
     }
 }
 
-class RepoViewHolder(view: View) : RecyclerView.ViewHolder(view) {
+class RepoViewHolder(view: View, private val listener: RepoListAdapter.ItemSelectedListener?) :
+    RecyclerView.ViewHolder(view) {
     private val titleView: TextView = view.findViewById(R.id.repo_title)
     private val descriptionView: TextView = view.findViewById(R.id.repo_description)
     private val imageView: ImageView = view.findViewById(R.id.repo_image)
 
     fun bind(repoItem: RepoItem) {
+        listener?.run { itemView.setOnClickListener { onItemSelected(repoItem.id) } }
         titleView.text = repoItem.name
         descriptionView.text = repoItem.description
         repoItem.imageUrl.takeIf { it.isNotBlank() }?.let {

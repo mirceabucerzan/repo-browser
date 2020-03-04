@@ -13,6 +13,8 @@ import kotlinx.coroutines.launch
 class RepoBrowserViewModel(private val repository: GitHubRepository) : ViewModel() {
 
     private lateinit var squareRepositories: MutableLiveData<UiResource<List<RepoItem>>>
+    private var repoDtoList: List<RepoDto>? = null
+    private val openWebPageEvent = MutableLiveData<UniqueEvent<String>>()
 
     /**
      * Returns an observable [UiResource] for displaying GitHub repository data for Square org.
@@ -23,12 +25,20 @@ class RepoBrowserViewModel(private val repository: GitHubRepository) : ViewModel
             squareRepositories.value = UiResource.Loading
             viewModelScope.launch {
                 val result = repository.getRepos(GitHubRepository.SQUARE_ORG_NAME)
+
                 squareRepositories.value = when (result) {
-                    is Result.Success -> UiResource.Success(result.data.map { it.toRepoItem() })
-                    is Result.Error -> if (result.exception is NoNetworkException) {
-                        UiResource.Error.NoNetworkConnection
-                    } else {
-                        UiResource.Error.Unknown
+                    is Result.Success -> {
+                        repoDtoList = result.data
+                        UiResource.Success(result.data.map { it.toRepoItem() })
+                    }
+
+                    is Result.Error -> {
+                        repoDtoList = null
+                        if (result.exception is NoNetworkException) {
+                            UiResource.Error.NoNetworkConnection
+                        } else {
+                            UiResource.Error.Unknown
+                        }
                     }
                 }
             }
@@ -36,6 +46,13 @@ class RepoBrowserViewModel(private val repository: GitHubRepository) : ViewModel
         return squareRepositories
     }
 
+    fun getOpenWebPageEvent(): LiveData<UniqueEvent<String>> = openWebPageEvent
+
+    fun itemSelected(itemId: Long) {
+        repoDtoList?.find { it.id == itemId }?.htmlUrl?.let {
+            openWebPageEvent.value = UniqueEvent(it)
+        }
+    }
 }
 
 /**
@@ -58,8 +75,8 @@ internal class RepoBrowserViewModelFactory(
  * Extension function which maps the domain (network) model to the UI model.
  */
 private fun RepoDto.toRepoItem() = RepoItem(
+    id ?: -1L,
     name.orEmpty(),
     description.orEmpty(),
-    owner?.avatarUrl.orEmpty(),
-    owner?.htmlUrl.orEmpty()
+    owner?.avatarUrl.orEmpty()
 )
