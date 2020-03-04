@@ -74,7 +74,7 @@ internal class RepoBrowserViewModelFactory(
 /**
  * Extension function which maps the domain (network) model to the UI model.
  */
-private fun RepoDto.toRepoItem() = RepoItem(
+fun RepoDto.toRepoItem() = RepoItem(
     id ?: -1L,
     name.orEmpty(),
     description.orEmpty(),
