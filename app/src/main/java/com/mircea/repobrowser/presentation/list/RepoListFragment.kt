@@ -1,4 +1,4 @@
-package com.mircea.repobrowser.presentation
+package com.mircea.repobrowser.presentation.list
 
 import android.content.Intent
 import android.net.Uri
@@ -6,7 +6,7 @@ import android.os.Bundle
 import android.view.View
 import android.widget.ProgressBar
 import android.widget.TextView
-import androidx.appcompat.app.AppCompatActivity
+import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -15,13 +15,15 @@ import com.mircea.repobrowser.R
 import com.mircea.repobrowser.data.DefaultGitHubRepository
 import com.mircea.repobrowser.data.GitHubApi
 import com.mircea.repobrowser.networking.provideRetrofitApi
+import com.mircea.repobrowser.presentation.*
 import timber.log.Timber
 
 /**
- * Activity which displays a vertically scrollable list of Square's GitHub repositories.
+ * Fragment which displays a vertically scrollable list of Square's GitHub repositories.
  * Each list item displays the repo's name, description and owner avatar image.
  */
-class RepoBrowserActivity : AppCompatActivity(), RepoListAdapter.ItemSelectedListener {
+class RepoListFragment : Fragment(R.layout.fragment_repo_list),
+    RepoListAdapter.ItemSelectedListener {
 
     private lateinit var viewModel: RepoBrowserViewModel
     private lateinit var repoListAdapter: RepoListAdapter
@@ -66,7 +68,7 @@ class RepoBrowserActivity : AppCompatActivity(), RepoListAdapter.ItemSelectedLis
         val webPageUri = Uri.parse(url)
         val intent = Intent(Intent.ACTION_VIEW, webPageUri)
         // check if the Intent can be resolved, and start the activity
-        if (intent.resolveActivity(packageManager) != null) {
+        if (intent.resolveActivity(requireActivity().packageManager) != null) {
             Timber.d("Opening web page $webPageUri")
             startActivity(intent)
         }
@@ -74,24 +76,22 @@ class RepoBrowserActivity : AppCompatActivity(), RepoListAdapter.ItemSelectedLis
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
-        // set up views
-        setContentView(R.layout.activity_repo_browser)
-        setSupportActionBar(findViewById(R.id.toolbar))
-        supportActionBar?.title = getString(R.string.activity_repo_browser_title)
-
-        loadingIndicator = findViewById(R.id.loading_indicator)
-        errorView = findViewById(R.id.error_text)
-        repoList = findViewById(R.id.repo_list)
-        repoList.setHasFixedSize(true)
-        repoList.layoutManager = LinearLayoutManager(this)
-        repoListAdapter = RepoListAdapter(this)
-        repoList.adapter = repoListAdapter
-
         // init ViewModel
         val repo = DefaultGitHubRepository(provideRetrofitApi(GitHubApi::class.java))
         val factory = RepoBrowserViewModelFactory(repo)
-        viewModel = ViewModelProviders.of(this, factory).get(RepoBrowserViewModel::class.java)
+        viewModel =
+            ViewModelProviders.of(requireActivity(), factory).get(RepoBrowserViewModel::class.java)
+    }
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        loadingIndicator = view.findViewById(R.id.loading_indicator)
+        errorView = view.findViewById(R.id.error_text)
+        repoList = view.findViewById(R.id.repo_list)
+        repoList.setHasFixedSize(true)
+        repoList.layoutManager = LinearLayoutManager(requireContext())
+        repoListAdapter = RepoListAdapter(this)
+        repoList.adapter = repoListAdapter
     }
 
     override fun onStart() {
