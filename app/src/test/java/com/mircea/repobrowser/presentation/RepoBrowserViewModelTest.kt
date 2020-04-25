@@ -144,7 +144,7 @@ class RepoBrowserViewModelTest {
     }
 
     @Test
-    fun openWebPageEventTriggered() = runBlockingTest {
+    fun openRepoDetailsEventTriggered() = runBlockingTest {
         // given
         val fakeRepoDto = RepoDto(
             1,
@@ -162,13 +162,13 @@ class RepoBrowserViewModelTest {
 
         // when
         viewModel.itemSelected(fakeRepoDto.id ?: 1)
-        val openEventLiveData = viewModel.getOpenWebPageEvent()
+        val openEventLiveData = viewModel.getOpenRepoDetailsEvent()
 
         // then
         openEventLiveData.observeForTesting {
             assertTrue(
-                "Url is invalid",
-                openEventLiveData.value?.getContent() == fakeRepoDto.htmlUrl
+                "Repo id is invalid",
+                openEventLiveData.value?.getContent() == fakeRepoDto.id
             )
         }
     }

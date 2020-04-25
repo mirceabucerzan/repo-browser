@@ -1,7 +1,5 @@
 package com.mircea.repobrowser.presentation.list
 
-import android.content.Intent
-import android.net.Uri
 import android.os.Bundle
 import android.view.View
 import android.widget.ProgressBar
@@ -9,9 +7,11 @@ import android.widget.TextView
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
+import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.mircea.repobrowser.R
+import com.mircea.repobrowser.activityToolbarTitle
 import com.mircea.repobrowser.data.DefaultGitHubRepository
 import com.mircea.repobrowser.data.GitHubApi
 import com.mircea.repobrowser.networking.provideRetrofitApi
@@ -64,14 +64,10 @@ class RepoListFragment : Fragment(R.layout.fragment_repo_list),
         }
     }
 
-    private val openWebPageEventObserver: UniqueEventObserver<String> = UniqueEventObserver { url ->
-        val webPageUri = Uri.parse(url)
-        val intent = Intent(Intent.ACTION_VIEW, webPageUri)
-        // check if the Intent can be resolved, and start the activity
-        if (intent.resolveActivity(requireActivity().packageManager) != null) {
-            Timber.d("Opening web page $webPageUri")
-            startActivity(intent)
-        }
+    private val openRepoDetailsObserver = UniqueEventObserver<Long> {
+        findNavController().navigate(
+            RepoListFragmentDirections.actionRepoListToRepoDetails(it)
+        )
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -92,14 +88,16 @@ class RepoListFragment : Fragment(R.layout.fragment_repo_list),
         repoList.layoutManager = LinearLayoutManager(requireContext())
         repoListAdapter = RepoListAdapter(this)
         repoList.adapter = repoListAdapter
+
+        // observe data
+        viewModel.getSquareRepositories().observe(viewLifecycleOwner, repoListObserver)
+        // observe open web page events
+        viewModel.getOpenRepoDetailsEvent().observe(viewLifecycleOwner, openRepoDetailsObserver)
     }
 
     override fun onStart() {
         super.onStart()
-        // observe data
-        viewModel.getSquareRepositories().observe(this, repoListObserver)
-        // observe open web page events
-        viewModel.getOpenWebPageEvent().observe(this, openWebPageEventObserver)
+        activityToolbarTitle = getString(R.string.activity_repo_browser_title)
     }
 
     override fun onItemSelected(itemId: Long) {
