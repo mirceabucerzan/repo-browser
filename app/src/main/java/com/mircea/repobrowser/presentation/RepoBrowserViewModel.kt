@@ -1,5 +1,6 @@
 package com.mircea.repobrowser.presentation
 
+import android.util.LongSparseArray
 import androidx.lifecycle.*
 import com.mircea.repobrowser.data.GitHubRepository
 import com.mircea.repobrowser.data.RepoDto
@@ -12,21 +13,30 @@ import kotlinx.coroutines.launch
  */
 class RepoBrowserViewModel(private val repository: GitHubRepository) : ViewModel() {
 
-    private lateinit var squareRepositories: MutableLiveData<UiResource<List<RepoItem>>>
+    // The raw list of fetched repos
     private var repoDtoList: List<RepoDto>? = null
-    private val openWebPageEvent = MutableLiveData<UniqueEvent<String>>()
+
+    // Observable list of repos, for the repos list UI
+    private lateinit var uiRepoItemList: MutableLiveData<UiResource<List<RepoItem>>>
+
+    // In memory cache of observable RepoItems, for the repo details UI
+    private val uiRepoItemMap = LongSparseArray<MutableLiveData<UiResource<RepoItem>>>()
+
+    // Navigation event
+    private val openRepoDetailsEvent = MutableLiveData<UniqueEvent<Long>>()
 
     /**
      * Returns an observable [UiResource] for displaying GitHub repository data for Square org.
      */
     fun getSquareRepositories(): LiveData<UiResource<List<RepoItem>>> {
-        if (!this::squareRepositories.isInitialized) {
-            squareRepositories = MutableLiveData()
-            squareRepositories.value = UiResource.Loading
+        if (!this::uiRepoItemList.isInitialized) {
+            // fetch only once, no refresh
+            uiRepoItemList = MutableLiveData()
+            uiRepoItemList.value = UiResource.Loading
             viewModelScope.launch {
                 val result = repository.getRepos(GitHubRepository.SQUARE_ORG_NAME)
 
-                squareRepositories.value = when (result) {
+                uiRepoItemList.value = when (result) {
                     is Result.Success -> {
                         repoDtoList = result.data
                         UiResource.Success(result.data.map { it.toRepoItem() })
@@ -43,14 +53,32 @@ class RepoBrowserViewModel(private val repository: GitHubRepository) : ViewModel
                 }
             }
         }
-        return squareRepositories
+        return uiRepoItemList
     }
 
-    fun getOpenWebPageEvent(): LiveData<UniqueEvent<String>> = openWebPageEvent
+    fun getSquareRepository(id: Long): LiveData<UiResource<RepoItem>> {
+        // check cache first
+        var uiRepoItem = uiRepoItemMap[id]
+        if (uiRepoItem == null) {
+            uiRepoItem = MutableLiveData()
+            uiRepoItemMap.put(id, uiRepoItem)
+            // must have been fetched previously, retrieve and wrap in LiveData
+            repoDtoList?.find { it.id == id }?.let { repoDto ->
+                uiRepoItem.value = UiResource.Success(repoDto.toRepoItem())
+            } ?: run {
+                // very unlikely, since we fetch all of Square's repos, but we
+                // could fetch the individual repo from the github API, by id
+                uiRepoItem.value = UiResource.Error.Unknown
+            }
+        }
+        return uiRepoItem
+    }
+
+    fun getOpenRepoDetailsEvent(): LiveData<UniqueEvent<Long>> = openRepoDetailsEvent
 
     fun itemSelected(itemId: Long) {
-        repoDtoList?.find { it.id == itemId }?.htmlUrl?.let {
-            openWebPageEvent.value = UniqueEvent(it)
+        repoDtoList?.find { it.id == itemId }?.id?.let {
+            openRepoDetailsEvent.value = UniqueEvent(it)
         }
     }
 }
@@ -78,5 +106,6 @@ fun RepoDto.toRepoItem() = RepoItem(
     id ?: -1L,
     name.orEmpty(),
     description.orEmpty(),
+    htmlUrl.orEmpty(),
     owner?.avatarUrl.orEmpty()
 )
