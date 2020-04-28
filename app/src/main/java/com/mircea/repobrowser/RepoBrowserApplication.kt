@@ -1,14 +1,17 @@
 package com.mircea.repobrowser
 
 import android.app.Application
+import com.mircea.repobrowser.di.DaggerApplicationComponent
 import com.mircea.repobrowser.logging.TimberReleaseTree
 import com.mircea.repobrowser.networking.HttpClientManager
+import dagger.android.AndroidInjector
+import dagger.android.support.DaggerApplication
 import timber.log.Timber
 
 /**
- * [Application] subclass responsible for global initialization.
+ * [Application] subclass that uses Dagger for DI.
  */
-class RepoBrowserApplication : Application() {
+class RepoBrowserApplication : DaggerApplication() {
 
     override fun onCreate() {
         super.onCreate()
@@ -20,4 +23,7 @@ class RepoBrowserApplication : Application() {
         HttpClientManager.init(this)
     }
 
+    override fun applicationInjector(): AndroidInjector<out DaggerApplication> {
+        return DaggerApplicationComponent.factory().create(applicationContext)
+    }
 }
