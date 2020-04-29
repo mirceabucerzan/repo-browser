@@ -1,17 +1,23 @@
 package com.mircea.repobrowser.presentation
 
 import android.util.LongSparseArray
-import androidx.lifecycle.*
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.mircea.repobrowser.data.GitHubRepository
 import com.mircea.repobrowser.data.RepoDto
 import com.mircea.repobrowser.networking.NoNetworkException
 import com.mircea.repobrowser.networking.Result
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
 /**
  * [ViewModel] holding observable GitHub repository data for Square org.
  */
-class RepoBrowserViewModel(private val repository: GitHubRepository) : ViewModel() {
+class RepoBrowserViewModel @Inject constructor(
+    private val repository: GitHubRepository
+) : ViewModel() {
 
     // The raw list of fetched repos
     private var repoDtoList: List<RepoDto>? = null
@@ -80,22 +86,6 @@ class RepoBrowserViewModel(private val repository: GitHubRepository) : ViewModel
         repoDtoList?.find { it.id == itemId }?.id?.let {
             openRepoDetailsEvent.value = UniqueEvent(it)
         }
-    }
-}
-
-/**
- * Factory which creates a [RepoBrowserViewModel].
- */
-internal class RepoBrowserViewModelFactory(
-    private val repository: GitHubRepository
-) : ViewModelProvider.Factory {
-
-    @Suppress("UNCHECKED_CAST")
-    override fun <T : ViewModel?> create(modelClass: Class<T>): T {
-        if (modelClass.isAssignableFrom(RepoBrowserViewModel::class.java)) {
-            return RepoBrowserViewModel(repository) as T
-        }
-        throw IllegalArgumentException("Unknown ViewModel class $modelClass")
     }
 }
 

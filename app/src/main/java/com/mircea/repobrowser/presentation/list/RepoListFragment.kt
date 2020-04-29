@@ -4,15 +4,18 @@ import android.os.Bundle
 import android.view.View
 import android.widget.ProgressBar
 import android.widget.TextView
+import androidx.fragment.app.viewModels
 import androidx.lifecycle.Observer
-import androidx.lifecycle.ViewModelProviders
+import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.mircea.repobrowser.R
 import com.mircea.repobrowser.activityToolbarTitle
-import com.mircea.repobrowser.data.GitHubRepository
-import com.mircea.repobrowser.presentation.*
+import com.mircea.repobrowser.presentation.RepoBrowserViewModel
+import com.mircea.repobrowser.presentation.RepoItem
+import com.mircea.repobrowser.presentation.UiResource
+import com.mircea.repobrowser.presentation.UniqueEventObserver
 import dagger.android.support.DaggerFragment
 import timber.log.Timber
 import javax.inject.Inject
@@ -24,7 +27,9 @@ import javax.inject.Inject
 class RepoListFragment : DaggerFragment(R.layout.fragment_repo_list),
     RepoListAdapter.ItemSelectedListener {
 
-    private lateinit var viewModel: RepoBrowserViewModel
+    @Inject
+    lateinit var factory: ViewModelProvider.Factory
+    private val viewModel: RepoBrowserViewModel by viewModels({ requireActivity() }, { factory })
     private lateinit var repoListAdapter: RepoListAdapter
     private lateinit var repoList: RecyclerView
     private lateinit var loadingIndicator: ProgressBar
@@ -67,18 +72,6 @@ class RepoListFragment : DaggerFragment(R.layout.fragment_repo_list),
         findNavController().navigate(
             RepoListFragmentDirections.actionRepoListToRepoDetails(it)
         )
-    }
-
-    // TODO Remove this after injecting the ViewModel factory
-    @Inject
-    lateinit var repo: GitHubRepository
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        // init ViewModel
-        val factory = RepoBrowserViewModelFactory(repo)
-        viewModel =
-            ViewModelProviders.of(requireActivity(), factory).get(RepoBrowserViewModel::class.java)
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {

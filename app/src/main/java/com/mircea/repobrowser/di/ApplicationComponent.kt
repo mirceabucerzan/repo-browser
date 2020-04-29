@@ -16,8 +16,7 @@ import javax.inject.Singleton
     modules = [
         AndroidSupportInjectionModule::class,
         ApplicationModule::class,
-        RepoListModule::class,
-        RepoDetailsModule::class
+        RepoModule::class
     ]
 )
 interface ApplicationComponent : AndroidInjector<RepoBrowserApplication> {
