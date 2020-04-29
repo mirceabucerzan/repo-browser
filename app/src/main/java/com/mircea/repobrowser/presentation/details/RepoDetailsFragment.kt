@@ -4,26 +4,25 @@ import android.os.Bundle
 import android.view.View
 import android.webkit.WebView
 import android.webkit.WebViewClient
-import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.Observer
 import androidx.navigation.fragment.navArgs
 import com.mircea.repobrowser.R
 import com.mircea.repobrowser.activityToolbarTitle
-import com.mircea.repobrowser.data.DefaultGitHubRepository
-import com.mircea.repobrowser.data.GitHubApi
-import com.mircea.repobrowser.networking.provideRetrofitApi
+import com.mircea.repobrowser.data.GitHubRepository
 import com.mircea.repobrowser.presentation.RepoBrowserViewModel
 import com.mircea.repobrowser.presentation.RepoBrowserViewModelFactory
 import com.mircea.repobrowser.presentation.RepoItem
 import com.mircea.repobrowser.presentation.UiResource
+import dagger.android.support.DaggerFragment
 import timber.log.Timber
+import javax.inject.Inject
 
 /**
  * Fragment that displays the html web page of a GitHub
  * repository, identified by the id passed in as argument.
  */
-class RepoDetailsFragment : Fragment(R.layout.fragment_repo_details) {
+class RepoDetailsFragment : DaggerFragment(R.layout.fragment_repo_details) {
 
     private val args: RepoDetailsFragmentArgs by navArgs()
     private lateinit var factory: RepoBrowserViewModelFactory
@@ -46,10 +45,12 @@ class RepoDetailsFragment : Fragment(R.layout.fragment_repo_details) {
     }
     private lateinit var webView: WebView
 
+    // TODO Remove this after injecting the ViewModel factory
+    @Inject
+    lateinit var repo: GitHubRepository
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        // The issue of creating a new repo will be solved when implementing proper DI (Dagger)
-        val repo = DefaultGitHubRepository(provideRetrofitApi(GitHubApi::class.java))
         factory = RepoBrowserViewModelFactory(repo)
     }
 

@@ -4,7 +4,6 @@ import android.os.Bundle
 import android.view.View
 import android.widget.ProgressBar
 import android.widget.TextView
-import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
 import androidx.navigation.fragment.findNavController
@@ -12,17 +11,17 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.mircea.repobrowser.R
 import com.mircea.repobrowser.activityToolbarTitle
-import com.mircea.repobrowser.data.DefaultGitHubRepository
-import com.mircea.repobrowser.data.GitHubApi
-import com.mircea.repobrowser.networking.provideRetrofitApi
+import com.mircea.repobrowser.data.GitHubRepository
 import com.mircea.repobrowser.presentation.*
+import dagger.android.support.DaggerFragment
 import timber.log.Timber
+import javax.inject.Inject
 
 /**
  * Fragment which displays a vertically scrollable list of Square's GitHub repositories.
  * Each list item displays the repo's name, description and owner avatar image.
  */
-class RepoListFragment : Fragment(R.layout.fragment_repo_list),
+class RepoListFragment : DaggerFragment(R.layout.fragment_repo_list),
     RepoListAdapter.ItemSelectedListener {
 
     private lateinit var viewModel: RepoBrowserViewModel
@@ -70,10 +69,13 @@ class RepoListFragment : Fragment(R.layout.fragment_repo_list),
         )
     }
 
+    // TODO Remove this after injecting the ViewModel factory
+    @Inject
+    lateinit var repo: GitHubRepository
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         // init ViewModel
-        val repo = DefaultGitHubRepository(provideRetrofitApi(GitHubApi::class.java))
         val factory = RepoBrowserViewModelFactory(repo)
         viewModel =
             ViewModelProviders.of(requireActivity(), factory).get(RepoBrowserViewModel::class.java)
