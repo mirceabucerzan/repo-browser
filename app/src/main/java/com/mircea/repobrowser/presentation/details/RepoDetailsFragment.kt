@@ -6,12 +6,11 @@ import android.webkit.WebView
 import android.webkit.WebViewClient
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.Observer
+import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.fragment.navArgs
 import com.mircea.repobrowser.R
 import com.mircea.repobrowser.activityToolbarTitle
-import com.mircea.repobrowser.data.GitHubRepository
 import com.mircea.repobrowser.presentation.RepoBrowserViewModel
-import com.mircea.repobrowser.presentation.RepoBrowserViewModelFactory
 import com.mircea.repobrowser.presentation.RepoItem
 import com.mircea.repobrowser.presentation.UiResource
 import dagger.android.support.DaggerFragment
@@ -24,8 +23,9 @@ import javax.inject.Inject
  */
 class RepoDetailsFragment : DaggerFragment(R.layout.fragment_repo_details) {
 
+    @Inject
+    lateinit var factory: ViewModelProvider.Factory
     private val args: RepoDetailsFragmentArgs by navArgs()
-    private lateinit var factory: RepoBrowserViewModelFactory
     private val viewModel: RepoBrowserViewModel by viewModels({ requireActivity() }, { factory })
     private val repoDetailsObserver = Observer<UiResource<RepoItem>> {
         when (it) {
@@ -44,15 +44,6 @@ class RepoDetailsFragment : DaggerFragment(R.layout.fragment_repo_details) {
         }
     }
     private lateinit var webView: WebView
-
-    // TODO Remove this after injecting the ViewModel factory
-    @Inject
-    lateinit var repo: GitHubRepository
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        factory = RepoBrowserViewModelFactory(repo)
-    }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
