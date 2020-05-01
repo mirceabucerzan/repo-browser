@@ -172,4 +172,78 @@ class RepoBrowserViewModelTest {
             )
         }
     }
+
+    @Test
+    fun getSquareRepositorySuccess() = runBlockingTest {
+        // given
+        val id = 123L
+        val fakeRepoDto = RepoDto(
+            id,
+            "Retrofit",
+            "Type safe HTTP client for Android",
+            "www.example.com",
+            OwnerDto("avatarUrl")
+        )
+        fakeRepository = object : GitHubRepository {
+            override suspend fun getRepos(organizationName: String): Result<List<RepoDto>> {
+                return Result.Success(listOf(fakeRepoDto))
+            }
+        }
+
+        // when
+        viewModel.getSquareRepositories()   // fetch first, so cache is populated
+        val liveRepo = viewModel.getSquareRepository(id)
+
+        // then
+        liveRepo.observeForTesting {
+            assertTrue("UI Resource is not Success", liveRepo.value is UiResource.Success<RepoItem>)
+            val data = (liveRepo.value as UiResource.Success<RepoItem>).data
+            assertEquals("Invalid repo id", fakeRepoDto.id, data.id)
+            assertEquals("Invalid repo name", fakeRepoDto.name, data.name)
+            assertEquals("Invalid repo description", fakeRepoDto.description, data.description)
+            assertEquals("Invalid repo htmlUrl", fakeRepoDto.htmlUrl, data.htmlUrl)
+            assertEquals("Invalid repo imageUrl", fakeRepoDto.owner?.avatarUrl, data.imageUrl)
+        }
+    }
+
+    @Test
+    fun getSquareRepositoryErrorUnknownId() = runBlockingTest {
+        // given
+        fakeRepository = object : GitHubRepository {
+            override suspend fun getRepos(organizationName: String): Result<List<RepoDto>> {
+                return Result.Success(listOf(RepoDto(789L, "", "", "", null)))
+            }
+        }
+
+        // when
+        viewModel.getSquareRepositories()   // fetch first, so cache is populated
+        val liveRepo = viewModel.getSquareRepository(123L)
+
+        // then
+        liveRepo.observeForTesting {
+            assertTrue(
+                "UI Resource is not Error.Unknown",
+                liveRepo.value is UiResource.Error.Unknown
+            )
+        }
+    }
+
+    @Test
+    fun getSquareRepositorySameIdReturnsSameInstance() = runBlockingTest {
+        // given
+        val id = 123L
+        fakeRepository = object : GitHubRepository {
+            override suspend fun getRepos(organizationName: String): Result<List<RepoDto>> {
+                return Result.Success(listOf(RepoDto(id, "", "", "", null)))
+            }
+        }
+
+        // when
+        viewModel.getSquareRepositories()   // fetch first, so cache is populated
+        val liveRepo1 = viewModel.getSquareRepository(id)
+        val liveRepo2 = viewModel.getSquareRepository(id)
+
+        // then
+        assertTrue("Different instance returned when using same id", liveRepo1 === liveRepo2)
+    }
 }
