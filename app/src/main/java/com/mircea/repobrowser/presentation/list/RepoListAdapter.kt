@@ -1,4 +1,4 @@
-package com.mircea.repobrowser.presentation
+package com.mircea.repobrowser.presentation.list
 
 import android.net.Uri
 import android.view.LayoutInflater
@@ -9,6 +9,7 @@ import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.mircea.repobrowser.R
+import com.mircea.repobrowser.presentation.RepoItem
 
 /**
  * Binds [RepoItem]s to views displayed in a RecyclerView.

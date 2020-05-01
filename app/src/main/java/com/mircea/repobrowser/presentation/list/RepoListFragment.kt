@@ -1,29 +1,35 @@
-package com.mircea.repobrowser.presentation
+package com.mircea.repobrowser.presentation.list
 
-import android.content.Intent
-import android.net.Uri
 import android.os.Bundle
 import android.view.View
 import android.widget.ProgressBar
 import android.widget.TextView
-import androidx.appcompat.app.AppCompatActivity
+import androidx.fragment.app.viewModels
 import androidx.lifecycle.Observer
-import androidx.lifecycle.ViewModelProviders
+import androidx.lifecycle.ViewModelProvider
+import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.mircea.repobrowser.R
-import com.mircea.repobrowser.data.DefaultGitHubRepository
-import com.mircea.repobrowser.data.GitHubApi
-import com.mircea.repobrowser.networking.provideRetrofitApi
+import com.mircea.repobrowser.activityToolbarTitle
+import com.mircea.repobrowser.presentation.RepoBrowserViewModel
+import com.mircea.repobrowser.presentation.RepoItem
+import com.mircea.repobrowser.presentation.UiResource
+import com.mircea.repobrowser.presentation.UniqueEventObserver
+import dagger.android.support.DaggerFragment
 import timber.log.Timber
+import javax.inject.Inject
 
 /**
- * Activity which displays a vertically scrollable list of Square's GitHub repositories.
+ * Fragment which displays a vertically scrollable list of Square's GitHub repositories.
  * Each list item displays the repo's name, description and owner avatar image.
  */
-class RepoBrowserActivity : AppCompatActivity(), RepoListAdapter.ItemSelectedListener {
+class RepoListFragment : DaggerFragment(R.layout.fragment_repo_list),
+    RepoListAdapter.ItemSelectedListener {
 
-    private lateinit var viewModel: RepoBrowserViewModel
+    @Inject
+    lateinit var factory: ViewModelProvider.Factory
+    private val viewModel: RepoBrowserViewModel by viewModels({ requireActivity() }, { factory })
     private lateinit var repoListAdapter: RepoListAdapter
     private lateinit var repoList: RecyclerView
     private lateinit var loadingIndicator: ProgressBar
@@ -62,44 +68,31 @@ class RepoBrowserActivity : AppCompatActivity(), RepoListAdapter.ItemSelectedLis
         }
     }
 
-    private val openWebPageEventObserver: UniqueEventObserver<String> = UniqueEventObserver { url ->
-        val webPageUri = Uri.parse(url)
-        val intent = Intent(Intent.ACTION_VIEW, webPageUri)
-        // check if the Intent can be resolved, and start the activity
-        if (intent.resolveActivity(packageManager) != null) {
-            Timber.d("Opening web page $webPageUri")
-            startActivity(intent)
-        }
+    private val openRepoDetailsObserver = UniqueEventObserver<Long> {
+        findNavController().navigate(
+            RepoListFragmentDirections.actionRepoListToRepoDetails(it)
+        )
     }
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-
-        // set up views
-        setContentView(R.layout.activity_repo_browser)
-        setSupportActionBar(findViewById(R.id.toolbar))
-        supportActionBar?.title = getString(R.string.activity_repo_browser_title)
-
-        loadingIndicator = findViewById(R.id.loading_indicator)
-        errorView = findViewById(R.id.error_text)
-        repoList = findViewById(R.id.repo_list)
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        loadingIndicator = view.findViewById(R.id.loading_indicator)
+        errorView = view.findViewById(R.id.error_text)
+        repoList = view.findViewById(R.id.repo_list)
         repoList.setHasFixedSize(true)
-        repoList.layoutManager = LinearLayoutManager(this)
+        repoList.layoutManager = LinearLayoutManager(requireContext())
         repoListAdapter = RepoListAdapter(this)
         repoList.adapter = repoListAdapter
 
-        // init ViewModel
-        val repo = DefaultGitHubRepository(provideRetrofitApi(GitHubApi::class.java))
-        val factory = RepoBrowserViewModelFactory(repo)
-        viewModel = ViewModelProviders.of(this, factory).get(RepoBrowserViewModel::class.java)
+        // observe data
+        viewModel.getSquareRepositories().observe(viewLifecycleOwner, repoListObserver)
+        // observe open web page events
+        viewModel.getOpenRepoDetailsEvent().observe(viewLifecycleOwner, openRepoDetailsObserver)
     }
 
     override fun onStart() {
         super.onStart()
-        // observe data
-        viewModel.getSquareRepositories().observe(this, repoListObserver)
-        // observe open web page events
-        viewModel.getOpenWebPageEvent().observe(this, openWebPageEventObserver)
+        activityToolbarTitle = getString(R.string.activity_repo_browser_title)
     }
 
     override fun onItemSelected(itemId: Long) {

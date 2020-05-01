@@ -9,7 +9,7 @@ data class RepoDto(
     @SerializedName("id") val id: Long? = null,
     @SerializedName("name") val name: String?,
     @SerializedName("description") val description: String?,
-    @SerializedName("html_url") val htmlUrl: String,
+    @SerializedName("html_url") val htmlUrl: String?,
     @SerializedName("owner") val owner: OwnerDto?
 )
 
