@@ -3,7 +3,7 @@ An Android application which displays a vertically scrollable list of [Square's]
 Each list item displays the repository's title, description and owner avatar logo image. Tapping on a list item opens a detailed view of the repository, with a WebView which shows the associated HTML web page.
 
 <div>
-  <img align="left" src="ssRepoList.png" alt="Repo list screenshot" height="320" width="160" style="margin-right:50px">
+  <img align="left" src="ssRepoList.png" alt="Repo list screenshot" height="320" width="160" style="margin-right:100px">
 </div>
 
 <div>
