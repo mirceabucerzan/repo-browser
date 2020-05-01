@@ -5,11 +5,12 @@ import android.net.ConnectivityManager
 import okhttp3.Interceptor
 import okhttp3.Response
 import java.io.IOException
+import javax.inject.Inject
 
 /**
  * [Interceptor] which checks Internet connectivity and throws [NoNetworkException] if necessary.
  */
-class NetworkConnectionInterceptor(private val context: Context) : Interceptor {
+class NetworkConnectionInterceptor @Inject constructor(private val context: Context) : Interceptor {
 
     override fun intercept(chain: Interceptor.Chain): Response {
         if (!isNetworkAvailable()) throw NoNetworkException()

@@ -2,12 +2,13 @@ package com.mircea.repobrowser.networking
 
 import okhttp3.Interceptor
 import okhttp3.Response
+import javax.inject.Inject
 
 /**
  * [Interceptor] which adds the correct GitHub API version header,
  * as per https://developer.github.com/v3/#current-version
  */
-class ApiVersionInterceptor : Interceptor {
+class ApiVersionInterceptor @Inject constructor() : Interceptor {
     companion object {
         private const val HEADER_ACCEPT = "Accept"
         private const val MEDIA_TYPE_GITHUB = "application/vnd.github.v3+json"
